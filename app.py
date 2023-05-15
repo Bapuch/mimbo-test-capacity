@@ -1,3 +1,60 @@
+import numpy as np
+import pandas as pd
+from dash import Dash, html, dcc, Input, Output, State
+import plotly.express as px
+
+
+def annual_estate_s(df, saving_rate, 
+                    inflation_rate, stability_rate, average_return, project_duration):
+    
+    return (df.current_estate * np.power(1 + average_return, project_duration * (df.year +1)) +
+            saving_rate * df.current_income * np.power(1 + inflation_rate + stability_rate, 
+                                                       project_duration * (df.year +1)))
+           
+
+def get_annual_income(df, inflation_rate, stability_rate, project_duration):
+    return df.current_income *  np.power(1 + inflation_rate + stability_rate, project_duration * (df.year +1))
+
+def get_df_age(current_estate_list, current_income_list, saving_rate, project_duration, 
+                     inflation_rate, stability_rate, average_return, tolerance):
+    dfs = []
+    for current_estate in current_estate_list:
+        for current_income in current_income_list:
+            for year in range(0, project_duration+1):
+
+                dfi = pd.DataFrame(range(18,80), columns=["age"])
+                dfi["current_income"] = current_income
+                dfi["current_estate"] = current_estate
+                dfi["year"] = year
+                dfs.append(dfi)
+            
+    df = pd.concat(dfs)
+    df["age_factor"] = np.where(df.age <= 25, 1, 1-((df.age - 25)/(df.age + project_duration - 25)))
+
+#     df["age_factor"] = df.apply(lambda x: 1 if x["age"] <= 25 else 1-((x["age"] - 25)/(x["age"]  + x["time_to_expiry"] - 25)))
+
+    df["current_costs"] = df.current_income * saving_rate
+    df["annual_income"] = get_annual_income(df, inflation_rate, stability_rate, project_duration)
+    
+    
+    df["annual_costs"] = 0.8 * df.current_costs.apply(lambda x: max(x, 30000)) *\
+    np.power(1 + inflation_rate, project_duration * (df.year + 1))
+#     return df
+    df["annual_estate"] = annual_estate_s(df, saving_rate, 
+                inflation_rate, stability_rate, average_return, project_duration)
+    
+    
+
+    df["solvability"] = 2 / (1 + np.exp(df.annual_estate / df.annual_costs))
+    df["capacity"] = (df.age_factor + (1 - df.age_factor) * df.solvability) * 10
+    df["profil"] = np.round(np.where(df.capacity > tolerance, 0.2 * df.capacity + 0.8 * tolerance,
+                            0.8 * df.capacity + 0.2 * tolerance))
+    
+    df["revenue_label"] = "revenu=" + df.current_income.astype(str)
+    return df
+
+
+
 
 options = [{"label": f"{i:,.0f} €", "value": i} for i in range(0, 10_000_001, 1000)]
 
