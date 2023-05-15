@@ -325,8 +325,7 @@ def update_risk_capacity(capacity_data,  current_estate, current_estate_list, pr
     fig.update_layout(margin={'l': 40, 'b': 40, 't': 10, 'r': 0}, hovermode='closest')
     fig.update_xaxes(showline=True, linewidth=2, linecolor='black', gridcolor=None)
     fig.update_yaxes(showline=True, linewidth=2, linecolor='black', gridcolor='DarkBlue')
-    fig.update_layout(plot_bgcolor="white", paper_bgcolor="white", font_color="#003136")
-
+    fig.update_layout(plot_bgcolor="white", paper_bgcolor="white", font_color="#003136", yaxis_range=[0.5,10.5])
     return [fig]
 
 
@@ -352,7 +351,7 @@ def update_risk_profil(capacity_data,  current_estate, current_estate_list, proj
     fig.update_layout(margin={'l': 40, 'b': 40, 't': 10, 'r': 0}, hovermode='closest')
     fig.update_xaxes(showline=True, linewidth=2, linecolor='black', gridcolor=None)
     fig.update_yaxes(showline=True, linewidth=2, linecolor='black', gridcolor='DarkBlue')
-    fig.update_layout(plot_bgcolor="white", paper_bgcolor="white", font_color="DarkBlue")
+    fig.update_layout(plot_bgcolor="white", paper_bgcolor="white", font_color="DarkBlue", yaxis_range=[0.5,10.5])
 
     return [fig]
     
@@ -386,7 +385,7 @@ def update_second_capacity_plot(capacity_data, hoverData, current_estate, curren
 
     fig.update_xaxes(showline=True, linewidth=2, linecolor='black', gridcolor=None)#, autorange = "reversed")
     fig.update_yaxes(showline=True, linewidth=2, linecolor='black', gridcolor='DarkBlue')
-    fig.update_layout(plot_bgcolor="white", paper_bgcolor="mintcream", title=title)
+    fig.update_layout(plot_bgcolor="white", paper_bgcolor="mintcream", title=title, yaxis_range=[0.5,10.5])
 
     return [fig]
 
@@ -421,6 +420,6 @@ def update_second_profil_plot(capacity_data, hoverData, current_estate, current_
 
     fig.update_xaxes(showline=True, linewidth=2, linecolor='black', gridcolor=None)#, autorange = "reversed")
     fig.update_yaxes(showline=True, linewidth=2, linecolor='black', gridcolor='DarkBlue')
-    fig.update_layout(plot_bgcolor="white", paper_bgcolor="#dffbfb", title=title)
+    fig.update_layout(plot_bgcolor="white", paper_bgcolor="#dffbfb", title=title, yaxis_range=[0.5,10.5])
 
     return [fig]
