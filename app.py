@@ -1,60 +1,3 @@
-import numpy as np
-import pandas as pd
-from dash import Dash, html, dcc, Input, Output, State
-import plotly.express as px
-
-
-def annual_estate_s(df, saving_rate, 
-                    inflation_rate, stability_rate, average_return, project_duration):
-    
-    return (df.current_estate * np.power(1 + average_return, project_duration * (df.year +1)) +
-            saving_rate * df.current_income * np.power(1 + inflation_rate + stability_rate, 
-                                                       project_duration * (df.year +1)))
-           
-
-def get_annual_income(df, inflation_rate, stability_rate, project_duration):
-    return df.current_income *  np.power(1 + inflation_rate + stability_rate, project_duration * (df.year +1))
-
-def get_df_age(current_estate_list, current_income_list, saving_rate, project_duration, 
-                     inflation_rate, stability_rate, average_return, tolerance):
-    dfs = []
-    for current_estate in current_estate_list:
-        for current_income in current_income_list:
-            for year in range(0, project_duration+1):
-
-                dfi = pd.DataFrame(range(18,80), columns=["age"])
-                dfi["current_income"] = current_income
-                dfi["current_estate"] = current_estate
-                dfi["year"] = year
-                dfs.append(dfi)
-            
-    df = pd.concat(dfs)
-    df["age_factor"] = np.where(df.age <= 25, 1, 1-((df.age - 25)/(df.age + project_duration - 25)))
-
-#     df["age_factor"] = df.apply(lambda x: 1 if x["age"] <= 25 else 1-((x["age"] - 25)/(x["age"]  + x["time_to_expiry"] - 25)))
-
-    df["current_costs"] = df.current_income * saving_rate
-    df["annual_income"] = get_annual_income(df, inflation_rate, stability_rate, project_duration)
-    
-    
-    df["annual_costs"] = 0.8 * df.current_costs.apply(lambda x: max(x, 30000)) *\
-    np.power(1 + inflation_rate, project_duration * (df.year + 1))
-#     return df
-    df["annual_estate"] = annual_estate_s(df, saving_rate, 
-                inflation_rate, stability_rate, average_return, project_duration)
-    
-    
-
-    df["solvability"] = 2 / (1 + np.exp(df.annual_estate / df.annual_costs))
-    df["capacity"] = (df.age_factor + (1 - df.age_factor) * df.solvability) * 10
-    df["profil"] = np.round(np.where(df.capacity > tolerance, 0.2 * df.capacity + 0.8 * tolerance,
-                            0.8 * df.capacity + 0.2 * tolerance))
-    
-    df["revenue_label"] = "revenu=" + df.current_income.astype(str)
-    return df
-
-
-
 
 options = [{"label": f"{i:,.0f} €", "value": i} for i in range(0, 10_000_001, 1000)]
 
@@ -205,15 +148,16 @@ app.layout = html.Div([
                    html.Div(className="row", 
                             children=[
                        html.H3("Capacité en fonction de l'âge", 
-                                   style={'padding': 5, "text-align": "center", 
+                                   style={'padding': 5, "text-align": "center",
                                           "color":"black"}),
                        html.Div([  
                              dcc.Graph(
                                 id='capacity-plot',
                                 hoverData={'points': [{'customdata': 18}]},
+                                 style={"border-radius": "6px"}
                             )
-                        ], style={'padding': '0 20', "border":".5px black solid",
-                                     "box-shadow": "5px 2px 2px","margin": "0 5px", }),
+                        ], style={'padding': '0 20', "border":"5px #003136 solid", "border-radius": "6px",
+                                     "box-shadow": "3px 2px 5px","margin": "0 5px"}),
                    ],  style={'width': '50%', "horizontal-align": "left", 'display': 'inline-block'}),
                    
                    
@@ -226,7 +170,7 @@ app.layout = html.Div([
                                 id='profil-plot',
                                 hoverData={'points': [{'customdata': 18}]},
                             )
-                        ], style={'padding': '0 20', "border":".5px black solid",
+                        ], style={'padding': '0 20', "border":"5px darkblue solid", "border-radius": "6px",
                                      "box-shadow": "5px 2px 2px","margin": "0 5px", }),
                    ], style={'width': '50%', "horizontal-align":"right", 'display': 'inline-block'}),
                    
@@ -308,12 +252,7 @@ def current_estate_options(current_estate_list):
     State('project_duration', 'value')
 )
 def update_risk_capacity(capacity_data,  current_estate, current_estate_list, project_duration):
-#     print("\nPROUT", n_clicks)
-#     print("Estate List:", current_estate_list)
-#     print("income LIST: ", current_income_list)
-#     print("updating plot 1", type(capacity_data), capacity_data)
-    
-#     current_estate = 0
+
     if current_estate is None and isinstance(current_estate_list, list):
         current_estate = current_estate_list[0]
         
@@ -329,7 +268,7 @@ def update_risk_capacity(capacity_data,  current_estate, current_estate_list, pr
     fig.update_layout(margin={'l': 40, 'b': 40, 't': 10, 'r': 0}, hovermode='closest')
     fig.update_xaxes(showline=True, linewidth=2, linecolor='black', gridcolor=None)
     fig.update_yaxes(showline=True, linewidth=2, linecolor='black', gridcolor='DarkBlue')
-    fig.update_layout(plot_bgcolor="white", paper_bgcolor="#003136", font_color="white")
+    fig.update_layout(plot_bgcolor="white", paper_bgcolor="white", font_color="#003136")
 
     return [fig]
 
@@ -340,12 +279,7 @@ def update_risk_capacity(capacity_data,  current_estate, current_estate_list, pr
     State('current_estate_list', 'value'), State('project_duration', 'value')
 )
 def update_risk_profil(capacity_data,  current_estate, current_estate_list, project_duration):
-#     print("\nPROUT", n_clicks)
-#     print("Estate List:", current_estate_list)
-#     print("income LIST: ", current_income_list)
-#     print("updating plot 1", type(capacity_data), capacity_data)
-    
-#     current_estate = 0
+
     if current_estate is None and isinstance(current_estate_list, list):
         current_estate = current_estate_list[0]
         
@@ -361,7 +295,7 @@ def update_risk_profil(capacity_data,  current_estate, current_estate_list, proj
     fig.update_layout(margin={'l': 40, 'b': 40, 't': 10, 'r': 0}, hovermode='closest')
     fig.update_xaxes(showline=True, linewidth=2, linecolor='black', gridcolor=None)
     fig.update_yaxes(showline=True, linewidth=2, linecolor='black', gridcolor='DarkBlue')
-    fig.update_layout(plot_bgcolor="white", paper_bgcolor="#004040", font_color="white")
+    fig.update_layout(plot_bgcolor="white", paper_bgcolor="white", font_color="DarkBlue")
 
     return [fig]
     
@@ -379,13 +313,10 @@ def update_second_capacity_plot(capacity_data, hoverData, current_estate, curren
     title = f'<b>Age = {age}</b><br>Evolution de la capcité de risque au cours des années'
     if current_estate is None:
         current_estate = current_estate_list[0]
-#         print("Default estate set 2 !", current_estate)
-#     print("plot 2 -" ,age, current_estate)
+
     
     df_capacity = pd.DataFrame(capacity_data)
     dff = df_capacity[(df_capacity.age == age) & (df_capacity.current_estate == current_estate)].round(3)
-    
-#     print("fig 2:", dff.shape)
     
     fig = px.line(dff, x='year', y='capacity', 
                      hover_name= "revenue_label", 
@@ -395,14 +326,11 @@ def update_second_capacity_plot(capacity_data, hoverData, current_estate, curren
     
 
     fig.update_xaxes(showgrid=False)
-#     fig.add_annotation(x=0, y=0.85, xanchor='left', yanchor='bottom',
-#                        xref='paper', yref='paper', showarrow=False, align='left',
-#                        text=title)
+
     fig.update_xaxes(showline=True, linewidth=2, linecolor='black', gridcolor=None)#, autorange = "reversed")
     fig.update_yaxes(showline=True, linewidth=2, linecolor='black', gridcolor='DarkBlue')
-    fig.update_layout(plot_bgcolor="white", paper_bgcolor="#dffbfb", title=title)
-    # fig.update_layout(height=225, margin={'l': 20, 'b': 30, 'r': 10, 't': 10})
-#     fig['layout']['xaxis']['autorange'] = "reversed"
+    fig.update_layout(plot_bgcolor="white", paper_bgcolor="mintcream", title=title)
+
     return [fig]
 
 
@@ -420,13 +348,10 @@ def update_second_profil_plot(capacity_data, hoverData, current_estate, current_
     title = f'<b>Age = {age}</b><br>Evolution du profil de risque au cours des années'
     if current_estate is None:
         current_estate = current_estate_list[0]
-#         print("Default estate set 2 !", current_estate)
-#     print("plot 2 -" ,age, current_estate)
     
     df_capacity = pd.DataFrame(capacity_data)
     dff = df_capacity[(df_capacity.age == age) & (df_capacity.current_estate == current_estate)].round(3)
     
-#     print("fig 2:", dff.shape)
     
     fig = px.line(dff, x='year', y='profil', 
                      hover_name= "revenue_label", 
@@ -436,18 +361,9 @@ def update_second_profil_plot(capacity_data, hoverData, current_estate, current_
     
 
     fig.update_xaxes(showgrid=False)
-    
-#     fig.add_annotation(x=0, y=0.85, xanchor='left', yanchor='bottom',
-#                        xref='paper', yref='paper', showarrow=False, align='left',
-#                        text=title)
+
     fig.update_xaxes(showline=True, linewidth=2, linecolor='black', gridcolor=None)#, autorange = "reversed")
     fig.update_yaxes(showline=True, linewidth=2, linecolor='black', gridcolor='DarkBlue')
-    fig.update_layout(plot_bgcolor="white", paper_bgcolor="mintcream", title=title)
-    # fig.update_layout(height=225, margin={'l': 20, 'b': 30, 'r': 10, 't': 10})
-#     fig['layout']['xaxis']['autorange'] = "reversed"
+    fig.update_layout(plot_bgcolor="white", paper_bgcolor="#dffbfb", title=title)
+
     return [fig]
-
-
-
-
-
