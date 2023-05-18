@@ -45,7 +45,7 @@ def get_df_age(current_estate_list, current_income_list, saving_rate, project_du
     
     
 
-    df["solvability"] = 2 / (1 + np.exp(df.annual_estate / df.annual_costs))
+    df["solvability"] = 2 / (1 + np.exp(df.annual_costs / df.annual_estate))
     df["capacity"] = (df.age_factor + (1 - df.age_factor) * df.solvability) * 10
     df["profil"] = np.round(np.where(df.capacity > tolerance, 0.2 * df.capacity + 0.8 * tolerance,
                             0.8 * df.capacity + 0.2 * tolerance))
@@ -172,12 +172,7 @@ app.layout = html.Div([
                     marks={i: str(i)  for i in range(1, 11)},
                     value=1,
                     tooltip={"placement": "bottom", "always_visible": True}),   
-           
-#                 html.Button(id='capacity_button',
-#                                 n_clicks = 0,
-#                                 children = 'Calculer la capacité',
-#                                 style = {'fontSize': 14, 'marginLeft': '30px', 'color' : 'white',\
-#                                          'horizontal-align': 'left','backgroundColor': 'LightBlue'}),                        
+                    
               ],style={'width': '80%', "horizontal-align": "center"}),           
             
             ],style={'width': '30%', 'font-family': 'calibri', 'vertical-align': 'top',
@@ -423,3 +418,7 @@ def update_second_profil_plot(capacity_data, hoverData, current_estate, current_
     fig.update_layout(plot_bgcolor="white", paper_bgcolor="#dffbfb", title=title, yaxis_range=[0.5,10.5])
 
     return [fig]
+
+
+if __name__=='__main__':
+    app.run_server()
